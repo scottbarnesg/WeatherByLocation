@@ -1,0 +1,5 @@
+# The following values are dynamic and will be updated automatically within the server when you change this file
+latitude: 30.58
+longitude: 97.85
+# The following values are static. You will need to reload the plugin or restart the server for them to take effect.
+minutes-between-updates: 15

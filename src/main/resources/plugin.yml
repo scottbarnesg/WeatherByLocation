@@ -1,0 +1,3 @@
+name: WeatherByLocation
+version: 0.1.0
+main: mc.spigot.weatherbylocation.WeatherByLocation
