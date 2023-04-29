@@ -149,7 +149,7 @@ public class WeatherByLocation extends JavaPlugin {
     private WeatherType getCurrentWeather(double lat, double lon) throws IOException, InterruptedException {
         // Send request to Open Meteo API
         int weatherCode = WeatherRequest.getCurrentWeather(lat, lon);
-        getLogger().info("Current weather for (%.3f, %.3f) is %s.".formatted(lat, lon, WmoCodes.get(weatherCode)));
+        getLogger().info("Current weather for (%.3f, %.3f) is %s. Weather data by Open-Metro.com".formatted(lat, lon, WmoCodes.get(weatherCode)));
         if (rainWeatherCodes.contains(weatherCode)) {
             return WeatherType.RAIN;
         }
