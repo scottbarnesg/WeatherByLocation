@@ -1,5 +1,25 @@
+###
+# Configuration file for the WeatherByLocation plugin
+# https://github.com/scottbarnesg/WeatherByLocation
+###
+
+###
 # The following values are dynamic and will be updated automatically within the server when you change this file
-latitude: 30.58
-longitude: 97.85
+###
+
+###
+# Geolocation
+# By default, WeatherByLocation will automatically geolocate your server based on its public IP address.
+# If this is the desired behavior, do not set any of the values in this section
+###
+
+# Set location based on latitude and longitude
+# latitude: 30.2666
+# longitude: -97.733
+
+###
 # The following values are static. You will need to reload the plugin or restart the server for them to take effect.
-minutes-between-updates: 15
+###
+
+# Set time between weather updates in minutes. Recommended range is 10-100. Must be an integer.
+minutes-between-updates: 1
