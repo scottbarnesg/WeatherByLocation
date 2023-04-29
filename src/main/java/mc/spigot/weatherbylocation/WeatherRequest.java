@@ -26,7 +26,6 @@ public class WeatherRequest {
         JsonNode jsonNode = objectMapper.readTree(responseBody);
         // Get Weather codes
         int weatherCode = jsonNode.get("current_weather").get("weathercode").asInt();
-        logger.info("Weather code for (%.2f, %.2f) is %d.".formatted(lat, lon, weatherCode));
         return weatherCode;
     }
     public static void main(String[] args) throws IOException, InterruptedException {
