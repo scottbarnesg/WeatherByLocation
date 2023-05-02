@@ -57,6 +57,7 @@ public class WeatherByLocation extends JavaPlugin {
     // Config
     ServerLocator.LocationData locationData;
     int minutesBetweenUpdates;
+    boolean shutdown = false;
 
     @Override
     public void onEnable() {
@@ -65,6 +66,7 @@ public class WeatherByLocation extends JavaPlugin {
     }
     @Override
     public void onDisable() {
+        shutdown = true;
         getLogger().info("Stopping background tasks...");
         updateWeatherTask.cancel();
         getLogger().info("WeatherByLocation was disabled.");
@@ -112,9 +114,11 @@ public class WeatherByLocation extends JavaPlugin {
                 // Fetch weather data
                 WeatherType weatherType = getCurrentWeather(locationData.latitude, locationData.longitude);
                 // Update weather on server
-                scheduler.runTask(this, () -> {
-                    setWeather(weatherType);
-                });
+                if (!shutdown) {
+                    scheduler.runTask(this, () -> {
+                        setWeather(weatherType);
+                    });
+                }
             } catch (IOException | InterruptedException e) {
                 getLogger().warning("Error fetching weather data.");
                 getLogger().warning(e.toString());
