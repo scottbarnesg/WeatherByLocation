@@ -22,4 +22,4 @@
 ###
 
 # Set time between weather updates in minutes. Recommended range is 10-100. Must be an integer.
-minutes-between-updates: 1
+minutes-between-updates: 15
