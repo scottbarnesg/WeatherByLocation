@@ -54,8 +54,6 @@ public class WeatherByLocation extends JavaPlugin {
             81, 82, 85, 86);
     List<Integer> thunderstormWeatherCodes = Arrays.asList(95, 96, 99);
     BukkitTask updateWeatherTask;
-    // Vars
-    WeatherType currentWeatherType;
     // Config
     ServerLocator.LocationData locationData;
     int minutesBetweenUpdates;
@@ -145,7 +143,6 @@ public class WeatherByLocation extends JavaPlugin {
             world.setThundering(false);
             getLogger().info("Weather was set to Thunderstorm.");
         }
-        currentWeatherType = weatherType;
     }
 
     private WeatherType getCurrentWeather(double lat, double lon) throws IOException, InterruptedException {
