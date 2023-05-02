@@ -65,6 +65,7 @@ public class WeatherByLocation extends JavaPlugin {
     }
     @Override
     public void onDisable() {
+        getLogger().info("Stopping background tasks...");
         updateWeatherTask.cancel();
         getLogger().info("WeatherByLocation was disabled.");
     }
@@ -123,6 +124,9 @@ public class WeatherByLocation extends JavaPlugin {
     }
 
     private void setWeather(WeatherType weatherType) {
+        /*
+        NOTE: This function should only be called in a synchronous task.
+         */
         World world = Bukkit.getWorlds().get(0);
         // If no change to the weather type, return immediately
         if (weatherType == getCurrentServerWeather()) {
