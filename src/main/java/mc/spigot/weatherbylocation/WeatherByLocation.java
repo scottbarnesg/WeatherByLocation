@@ -54,8 +54,6 @@ public class WeatherByLocation extends JavaPlugin {
             81, 82, 85, 86);
     List<Integer> thunderstormWeatherCodes = Arrays.asList(95, 96, 99);
     BukkitTask updateWeatherTask;
-    // Vars
-    WeatherType currentWeatherType;
     // Config
     ServerLocator.LocationData locationData;
     int minutesBetweenUpdates;
@@ -113,7 +111,9 @@ public class WeatherByLocation extends JavaPlugin {
                 // Fetch weather data
                 WeatherType weatherType = getCurrentWeather(locationData.latitude, locationData.longitude);
                 // Update weather on server
-                setWeather(weatherType);
+                scheduler.runTask(this, () -> {
+                    setWeather(weatherType);
+                });
             } catch (IOException | InterruptedException e) {
                 getLogger().warning("Error fetching weather data.");
                 getLogger().warning(e.toString());
@@ -125,7 +125,7 @@ public class WeatherByLocation extends JavaPlugin {
     private void setWeather(WeatherType weatherType) {
         World world = Bukkit.getWorlds().get(0);
         // If no change to the weather type, return immediately
-        if (weatherType == currentWeatherType) {
+        if (weatherType == getCurrentServerWeather()) {
             return;
         }
         else if (weatherType.equals(WeatherType.CLEAR)) {
@@ -143,7 +143,6 @@ public class WeatherByLocation extends JavaPlugin {
             world.setThundering(false);
             getLogger().info("Weather was set to Thunderstorm.");
         }
-        currentWeatherType = weatherType;
     }
 
     private WeatherType getCurrentWeather(double lat, double lon) throws IOException, InterruptedException {
@@ -155,6 +154,19 @@ public class WeatherByLocation extends JavaPlugin {
         }
         else if (thunderstormWeatherCodes.contains(weatherCode)) {
             return WeatherType.THUNDERSTORM;
+        }
+        else {
+            return WeatherType.CLEAR;
+        }
+    }
+
+    private WeatherType getCurrentServerWeather() {
+        World world = Bukkit.getWorlds().get(0);
+        if (world.hasStorm() && world.isThundering()) {
+            return WeatherType.THUNDERSTORM;
+        }
+        else if (world.hasStorm()) {
+            return WeatherType.RAIN;
         }
         else {
             return WeatherType.CLEAR;
