@@ -8,5 +8,5 @@ commands:
     permission: weatherbylocation.set-weather-location
 permissions:
   set-weather-location:
-    description: Allows you to set the locatoin used to pull weather data.
+    description: Allows you to set the location used to pull weather data.
     default: op
