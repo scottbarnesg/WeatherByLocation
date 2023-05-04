@@ -21,6 +21,12 @@ A Spigot/Paper plugin that sets the weather on your minecraft server based on th
 3. [Optional] Navigate into the `WeatherByLocation` folder and edit `config.yml`. 
 4. [Optional] Update the values of `latitude` and `longitude` to your desired location. The server will automatically pick up these changes and update the weather accordingly. 
 
+## Commands
+
+- `set-weather-location`: set the location to be used to pull weather data from, by latitude and longitude.
+
+    - Example usage: `/set-weather-location 30.266 -97.733`
+
 ## External Services:
 
 WeatherByLocation uses the following external services:
