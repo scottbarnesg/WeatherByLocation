@@ -78,10 +78,8 @@ public class WeatherByLocation extends JavaPlugin {
     }
 
     private void loadLocationDataFromConfig() {
-        locationData = new ServerLocator.LocationData();
         locationData.latitude = getConfig().getDouble("latitude");
         locationData.longitude = getConfig().getDouble("longitude");
-        getLogger().info("Loaded location from config: (%.3f, %.3f)".formatted(locationData.latitude, locationData.longitude));
     }
 
     private void runStartupTasks() {
@@ -91,7 +89,9 @@ public class WeatherByLocation extends JavaPlugin {
         reloadConfig();
         if (configHasLatLon()) {
             // Check the config for location data
+            locationData = new ServerLocator.LocationData();
             loadLocationDataFromConfig();
+            getLogger().info("Loaded location from config: (%.3f, %.3f)".formatted(locationData.latitude, locationData.longitude));
         }
         else {
             // Otherwise, use the server's ip address to geolocate it and pull weather for that region.
