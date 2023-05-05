@@ -1,5 +1,5 @@
 name: WeatherByLocation
-version: 0.2.3
+version: 0.2.4
 main: mc.spigot.weatherbylocation.WeatherByLocation
 commands:
   set-weather-location:
