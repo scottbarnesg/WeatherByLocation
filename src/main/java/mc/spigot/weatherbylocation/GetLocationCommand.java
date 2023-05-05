@@ -20,7 +20,7 @@ public class GetLocationCommand implements CommandExecutor {
         String message = "Location used for weather data is (%.3f, %.3f)".formatted(locationData.latitude, locationData.longitude);
         if (sender instanceof Player) {
             Player player = (Player) sender;
-            player.sendMessage(ChatColor.DARK_BLUE + message);
+            player.sendMessage(ChatColor.AQUA + message);
         }
         else {
             plugin.getLogger().info(message);
