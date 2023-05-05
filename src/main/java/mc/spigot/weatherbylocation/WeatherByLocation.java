@@ -156,7 +156,7 @@ public class WeatherByLocation extends JavaPlugin {
         }
         else if (weatherType.equals(WeatherByLocation.WeatherType.THUNDERSTORM)) {
             world.setStorm(true);
-            world.setThundering(false);
+            world.setThundering(true);
             getLogger().info("Weather was set to Thunderstorm.");
         }
     }
