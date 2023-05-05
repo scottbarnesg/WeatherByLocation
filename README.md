@@ -4,7 +4,7 @@ A Spigot/Paper plugin that sets the weather on your minecraft server based on th
 
 ## Setup
 
-1. [Dowload the latest version of WeatherByLocation-X.Y.Z.jar](https://github.com/scottbarnesg/WeatherByLocation/releases) and copy it to the `plugins` folder of your minecraft server directory.
+1. [Download the latest version of WeatherByLocation-X.Y.Z.jar](https://github.com/scottbarnesg/WeatherByLocation/releases) and copy it to the `plugins` folder of your minecraft server directory.
 2. Restart the server. This will generate a `WeatherByLocation` directory in your `plugins` folder with a default configuration file.
 
     By default, the WeatherByLocation plugin will attempt to geolocate your server using its public IP address. If this is the desired behavior, no additional setup is required.
@@ -18,8 +18,7 @@ A Spigot/Paper plugin that sets the weather on your minecraft server based on th
     my-server | [18:08:34 INFO]: [WeatherByLocation] Weather was set to Clear.
     ```
 
-3. [Optional] Navigate into the `WeatherByLocation` folder and edit `config.yml`. 
-4. [Optional] Update the values of `latitude` and `longitude` to your desired location. The server will automatically pick up these changes and update the weather accordingly. 
+3. [Optional] If desired, use the `/set-weather-location` command to set a custom latitude and longitude for the server to use to pull weather data.
 
 ## Commands
 
