@@ -63,6 +63,7 @@ public class WeatherByLocation extends JavaPlugin {
     public void onEnable() {
         getLogger().info("WeatherByLocation was enabled.");
         getCommand("set-weather-location").setExecutor(new SetLocationCommand(this));
+        getCommand("get-weather-location").setExecutor(new GetLocationCommand(this));
         runStartupTasks();
     }
     @Override
@@ -71,6 +72,10 @@ public class WeatherByLocation extends JavaPlugin {
         getLogger().info("Stopping background tasks...");
         updateWeatherTask.cancel();
         getLogger().info("WeatherByLocation was disabled.");
+    }
+
+    public ServerLocator.LocationData getLocationData() {
+        return locationData;
     }
 
     private boolean configHasLatLon() {
