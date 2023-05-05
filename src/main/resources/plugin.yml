@@ -1,6 +1,7 @@
 name: WeatherByLocation
-version: 0.2.4
+version: 0.2.5
 main: mc.spigot.weatherbylocation.WeatherByLocation
+api-version: 1.19
 commands:
   set-weather-location:
     description: Set the latitude and longitude to use for weather data.
