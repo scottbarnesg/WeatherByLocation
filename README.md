@@ -41,3 +41,9 @@ WeatherByLocation uses the following external services:
     ** Pulls weather data. Always in use.
 
     *** Used to geolocate the server. Only used if no location is explicitly specified in the config file.
+
+
+## Supported Versions
+
+- Java 11 or greater.
+- Spigot/Paper 1.13 or greater.
