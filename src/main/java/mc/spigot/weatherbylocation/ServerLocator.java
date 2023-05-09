@@ -47,13 +47,13 @@ public class ServerLocator {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         // Reponse is just a string containing the IP address
         String result = response.body();
-        logger.info("Identified this server's public facing IP address as %s.".formatted(result));
+        logger.info(String.format("Identified this server's public facing IP address as %s.", result));
         return response.body();
     }
 
     private static LocationData geolocateIpAddress(String ipAddress) throws IOException, InterruptedException {
         Logger logger = Logger.getLogger("WeatherByLocation");
-        String requestUrlString = "http://ip-api.com/json/%s".formatted(ipAddress);
+        String requestUrlString = String.format("http://ip-api.com/json/%s", ipAddress);
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(requestUrlString))
@@ -71,7 +71,7 @@ public class ServerLocator {
         locationResult.latitude = jsonNode.get("lat").asDouble();
         locationResult.longitude = jsonNode.get("lon").asDouble();
         // Log result
-        logger.info("Server location identified as %s, %s, %s at coordinates (%.3f, %.3f)".formatted(locationResult.city, locationResult.region, locationResult.countryCode, locationResult.latitude, locationResult.longitude));
+        logger.info(String.format("Server location identified as %s, %s, %s at coordinates (%.3f, %.3f)", locationResult.city, locationResult.region, locationResult.countryCode, locationResult.latitude, locationResult.longitude));
         return locationResult;
     }
 }

@@ -48,9 +48,9 @@ public class SetLocationCommand implements CommandExecutor {
         plugin.saveConfig();
         if (sender instanceof Player) {
             Player player = (Player) sender;
-            player.sendMessage(ChatColor.AQUA + "Set weather location to (%.3f, %.3f)".formatted(lat, lon));
+            player.sendMessage(ChatColor.AQUA + String.format("Set weather location to (%.3f, %.3f)", lat, lon));
         }
-        getLogger().info("Set weather location to (%.3f, %.3f)".formatted(lat, lon));
+        getLogger().info(String.format("Set weather location to (%.3f, %.3f)", lat, lon));
         return true;
     }
 }
