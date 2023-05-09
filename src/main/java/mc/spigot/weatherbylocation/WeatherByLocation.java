@@ -96,7 +96,7 @@ public class WeatherByLocation extends JavaPlugin {
             // Check the config for location data
             locationData = new ServerLocator.LocationData();
             loadLocationDataFromConfig();
-            getLogger().info("Loaded location from config: (%.3f, %.3f)".formatted(locationData.latitude, locationData.longitude));
+            getLogger().info(String.format("Loaded location from config: (%.3f, %.3f)", locationData.latitude, locationData.longitude));
         }
         else {
             // Otherwise, use the server's ip address to geolocate it and pull weather for that region.
@@ -164,7 +164,7 @@ public class WeatherByLocation extends JavaPlugin {
     private WeatherType getCurrentWeather(double lat, double lon) throws IOException, InterruptedException {
         // Send request to Open Meteo API
         int weatherCode = WeatherRequest.getCurrentWeather(lat, lon);
-        getLogger().info("Current weather for (%.3f, %.3f) is %s. Weather data by Open-Metro.com".formatted(lat, lon, WmoCodes.get(weatherCode)));
+        getLogger().info(String.format("Current weather for (%.3f, %.3f) is %s. Weather data by Open-Metro.com", lat, lon, WmoCodes.get(weatherCode)));
         if (rainWeatherCodes.contains(weatherCode)) {
             return WeatherType.RAIN;
         }

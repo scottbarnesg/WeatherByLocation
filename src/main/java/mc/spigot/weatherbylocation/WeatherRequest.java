@@ -14,7 +14,7 @@ public class WeatherRequest {
     public static int getCurrentWeather(double lat, double lon) throws IOException, InterruptedException {
         Logger logger = Logger.getLogger("WeatherByLocation");
         // Send request to Open Meteo API
-        String requestUrlString = "https://api.open-meteo.com/v1/forecast?latitude=%.2f&longitude=%.2f&current_weather=true".formatted(lat, lon);
+        String requestUrlString = String.format("https://api.open-meteo.com/v1/forecast?latitude=%.2f&longitude=%.2f&current_weather=true", lat, lon);
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(requestUrlString))
