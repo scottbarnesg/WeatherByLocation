@@ -140,8 +140,9 @@ public class WeatherByLocation extends JavaPlugin {
         NOTE: This function should only be called in a synchronous task.
          */
         World world = Bukkit.getWorlds().get(0);
-        // If no change to the weather type, return immediately
+        // If no change to the weather type, extend weather duration and return
         if (weatherType == getCurrentServerWeather()) {
+            world.setWeatherDuration(20 * 60 * minutesBetweenUpdates);
             return;
         }
         else if (weatherType.equals(WeatherType.CLEAR)) {
@@ -159,6 +160,7 @@ public class WeatherByLocation extends JavaPlugin {
             world.setThundering(true);
             getLogger().info("Weather was set to Thunderstorm.");
         }
+        world.setWeatherDuration(20 * 60 * minutesBetweenUpdates);
     }
 
     private WeatherType getCurrentWeather(double lat, double lon) throws IOException, InterruptedException {
