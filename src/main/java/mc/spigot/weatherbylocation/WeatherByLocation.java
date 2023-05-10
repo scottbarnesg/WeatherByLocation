@@ -78,13 +78,13 @@ public class WeatherByLocation extends JavaPlugin {
         return locationData;
     }
 
-    private boolean configHasLatLon() {
-        return getConfig().contains("latitude") && getConfig().contains("longitude");
-    }
-
-    private void loadLocationDataFromConfig() {
+    public void loadLocationDataFromConfig() {
         locationData.latitude = getConfig().getDouble("latitude");
         locationData.longitude = getConfig().getDouble("longitude");
+    }
+
+    private boolean configHasLatLon() {
+        return getConfig().contains("latitude") && getConfig().contains("longitude");
     }
 
     private void runStartupTasks() {
