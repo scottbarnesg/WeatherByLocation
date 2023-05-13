@@ -53,7 +53,9 @@ public class WeatherByLocation extends JavaPlugin {
     List<Integer> rainWeatherCodes = Arrays.asList(45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80,
             81, 82, 85, 86);
     List<Integer> thunderstormWeatherCodes = Arrays.asList(95, 96, 99);
-    BukkitTask updateWeatherTask;
+    BukkitTask fetchWeatherTask;
+    BukkitTask setWeatherTask;
+    WeatherType weatherType;
     // Config
     ServerLocator.LocationData locationData;
     int minutesBetweenUpdates;
@@ -70,7 +72,8 @@ public class WeatherByLocation extends JavaPlugin {
     public void onDisable() {
         shutdown = true;
         getLogger().info("Stopping background tasks...");
-        updateWeatherTask.cancel();
+        fetchWeatherTask.cancel();
+        setWeatherTask.cancel();
         getLogger().info("WeatherByLocation was disabled.");
     }
 
@@ -109,10 +112,10 @@ public class WeatherByLocation extends JavaPlugin {
                 throw new RuntimeException("Failed to identify a location for you server. Please update the configuration file to specify a location.");
             }
         }
-        // Schedule task to run every minutesBetweenUpdates minutes
+        // Schedule fetch weather task to run every minutesBetweenUpdates minutes
         minutesBetweenUpdates = getConfig().getInt("minutes-between-updates");
         BukkitScheduler scheduler = getServer().getScheduler();
-        updateWeatherTask = scheduler.runTaskTimerAsynchronously(this, () -> {
+        fetchWeatherTask = scheduler.runTaskTimerAsynchronously(this, () -> {
             try {
                 // Get latest values from config, if they exist
                 reloadConfig();
@@ -120,18 +123,17 @@ public class WeatherByLocation extends JavaPlugin {
                     loadLocationDataFromConfig();
                 }
                 // Fetch weather data
-                WeatherType weatherType = getCurrentWeather(locationData.latitude, locationData.longitude);
-                // Update weather on server
-                if (!shutdown) {
-                    scheduler.runTask(this, () -> {
-                        setWeather(weatherType);
-                    });
-                }
+                weatherType = getCurrentWeather(locationData.latitude, locationData.longitude);
             } catch (IOException | InterruptedException e) {
                 getLogger().warning("Error fetching weather data.");
                 getLogger().warning(e.toString());
             }
         }, 0L, (20L * 60 * minutesBetweenUpdates));
+        // Schedule set weather task to run every minute
+        setWeatherTask = scheduler.runTaskTimer(this, () -> {
+            setWeather(weatherType);
+        }, 20L * 30, 20L * 60);
+
 
     }
 
