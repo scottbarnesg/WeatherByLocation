@@ -2,6 +2,7 @@ package mc.spigot.weatherbylocation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
 import java.net.URI;
@@ -14,6 +15,12 @@ public class ServerLocator {
     private String ipAddress;
     private LocationData locationData;
 
+    private final WeatherByLocation plugin;
+
+    public ServerLocator(WeatherByLocation plugin) {
+        this.plugin = plugin;
+    }
+
     public static class LocationData {
         public String countryCode;
         public String region;
@@ -24,7 +31,14 @@ public class ServerLocator {
 
     public LocationData locate() throws IOException, InterruptedException {
         ipAddress = fetchIpAddress();
-        locationData = geolocateIpAddress(ipAddress);
+        FileConfiguration config = plugin.getConfig();
+
+        if(config.contains("ipAddress") && config.getString("ipAddress").equals(ipAddress)){
+            locationData =  locationDataFromConfig(config);
+        }else{
+            locationData = geolocateIpAddress(ipAddress, config);
+        }
+
         return locationData;
     }
 
@@ -45,13 +59,13 @@ public class ServerLocator {
                 .uri(URI.create(requestUrlString))
                 .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        // Reponse is just a string containing the IP address
+        // Response is just a string containing the IP address
         String result = response.body();
         logger.info(String.format("Identified this server's public facing IP address as %s.", result));
         return response.body();
     }
 
-    private static LocationData geolocateIpAddress(String ipAddress) throws IOException, InterruptedException {
+    private static LocationData geolocateIpAddress(String ipAddress, FileConfiguration config) throws IOException, InterruptedException {
         Logger logger = Logger.getLogger("WeatherByLocation");
         String requestUrlString = String.format("http://ip-api.com/json/%s", ipAddress);
         HttpClient client = HttpClient.newHttpClient();
@@ -70,8 +84,43 @@ public class ServerLocator {
         locationResult.city = jsonNode.get("city").asText();
         locationResult.latitude = jsonNode.get("lat").asDouble();
         locationResult.longitude = jsonNode.get("lon").asDouble();
+
+        // Save LocationData object to config.yml
+        saveDataToConfig(ipAddress,locationResult,config);
+
         // Log result
         logger.info(String.format("Server location identified as %s, %s, %s at coordinates (%.3f, %.3f)", locationResult.city, locationResult.region, locationResult.countryCode, locationResult.latitude, locationResult.longitude));
         return locationResult;
     }
+
+    private static LocationData locationDataFromConfig( FileConfiguration config) {
+        Logger logger = Logger.getLogger("WeatherByLocation");
+
+        // Create LocationData object and return it
+        LocationData locationResult = new LocationData();
+
+        locationResult.countryCode = config.getString("countryCode");
+        locationResult.region = config.getString("region");
+        locationResult.city = config.getString("city");
+        locationResult.latitude = config.getDouble("latitude");
+        locationResult.longitude = config.getDouble("longitude");
+
+        // Log result
+        logger.info(String.format("Server location identified as %s, %s, %s at coordinates (%.3f, %.3f)", locationResult.city, locationResult.region, locationResult.countryCode, locationResult.latitude, locationResult.longitude));
+        return locationResult;
+    }
+
+    private static void saveDataToConfig(String ipAddress, LocationData locationResult, FileConfiguration config) {
+
+        // Save new locationData object to config.yml file
+        config.set("ipAddress", ipAddress);
+        config.set("countryCode",  locationResult.countryCode);
+        config.set("region", locationResult.region);
+        config.set("city",  locationResult.city);
+        config.set("latitude", locationResult.latitude);
+        config.set("longitude",  locationResult.longitude);
+
+    }
+
+
 }
