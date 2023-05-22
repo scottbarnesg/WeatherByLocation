@@ -100,7 +100,7 @@ public class WeatherByLocation extends JavaPlugin {
         }
         else {
             // Otherwise, use the server's ip address to geolocate it and pull weather for that region.
-            ServerLocator serverLocator = new ServerLocator(this);
+            ServerLocator serverLocator = new ServerLocator();
             try {
                 locationData = serverLocator.locate();
             } catch (IOException | InterruptedException e) {
