@@ -14,8 +14,8 @@
 ###
 
 # Set location based on latitude and longitude
-# latitude: 30.2666
-# longitude: -97.733
+          latitude: 30.2666
+ longitude: -97.733
 
 ###
 # The following values are static. You will need to reload the plugin or restart the server for them to take effect.

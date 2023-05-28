@@ -1,12 +1,16 @@
 package mc.spigot.weatherbylocation;
 
+import com.google.common.base.Charsets;
 import org.bukkit.World;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
+import org.yaml.snakeyaml.parser.ParserException;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -64,8 +68,11 @@ public class WeatherByLocation extends JavaPlugin {
         getLogger().info("WeatherByLocation was enabled.");
         getCommand("set-weather-location").setExecutor(new SetLocationCommand(this));
         getCommand("get-weather-location").setExecutor(new GetLocationCommand(this));
+        getCommand("set-weather-update-interval").setExecutor(new SetUpdateInterval(this));
+
         runStartupTasks();
     }
+
     @Override
     public void onDisable() {
         shutdown = true;
@@ -90,6 +97,12 @@ public class WeatherByLocation extends JavaPlugin {
     private void runStartupTasks() {
         // Create default configuration file, if it doesn't exist
         saveDefaultConfig();
+
+        // validate config.yml file
+        boolean configIsValid = validateConfigFile();
+        if (!configIsValid ) return;
+
+
         // Refresh config
         reloadConfig();
         if (configHasLatLon()) {
@@ -100,7 +113,7 @@ public class WeatherByLocation extends JavaPlugin {
         }
         else {
             // Otherwise, use the server's ip address to geolocate it and pull weather for that region.
-            ServerLocator serverLocator = new ServerLocator();
+            ServerLocator serverLocator = new ServerLocator(this);
             try {
                 locationData = serverLocator.locate();
             } catch (IOException | InterruptedException e) {
@@ -134,7 +147,6 @@ public class WeatherByLocation extends JavaPlugin {
         }, 0L, (20L * 60 * minutesBetweenUpdates));
 
     }
-
     private void setWeather(WeatherType weatherType) {
         /*
         NOTE: This function should only be called in a synchronous task.
@@ -144,18 +156,15 @@ public class WeatherByLocation extends JavaPlugin {
         if (weatherType == getCurrentServerWeather()) {
             world.setWeatherDuration(20 * 60 * minutesBetweenUpdates);
             return;
-        }
-        else if (weatherType.equals(WeatherType.CLEAR)) {
+        } else if (weatherType.equals(WeatherType.CLEAR)) {
             world.setStorm(false);
             world.setThundering(false);
             getLogger().info("Weather was set to Clear.");
-        }
-        else if (weatherType.equals(WeatherByLocation.WeatherType.RAIN)) {
+        } else if (weatherType.equals(WeatherByLocation.WeatherType.RAIN)) {
             world.setStorm(true);
             world.setThundering(false);
             getLogger().info("Weather was set to Rain.");
-        }
-        else if (weatherType.equals(WeatherByLocation.WeatherType.THUNDERSTORM)) {
+        } else if (weatherType.equals(WeatherByLocation.WeatherType.THUNDERSTORM)) {
             world.setStorm(true);
             world.setThundering(true);
             getLogger().info("Weather was set to Thunderstorm.");
@@ -169,11 +178,9 @@ public class WeatherByLocation extends JavaPlugin {
         getLogger().info(String.format("Current weather for (%.3f, %.3f) is %s. Weather data by Open-Metro.com", lat, lon, WmoCodes.get(weatherCode)));
         if (rainWeatherCodes.contains(weatherCode)) {
             return WeatherType.RAIN;
-        }
-        else if (thunderstormWeatherCodes.contains(weatherCode)) {
+        } else if (thunderstormWeatherCodes.contains(weatherCode)) {
             return WeatherType.THUNDERSTORM;
-        }
-        else {
+        } else {
             return WeatherType.CLEAR;
         }
     }
@@ -182,12 +189,65 @@ public class WeatherByLocation extends JavaPlugin {
         World world = Bukkit.getWorlds().get(0);
         if (world.hasStorm() && world.isThundering()) {
             return WeatherType.THUNDERSTORM;
-        }
-        else if (world.hasStorm()) {
+        } else if (world.hasStorm()) {
             return WeatherType.RAIN;
-        }
-        else {
+        } else {
             return WeatherType.CLEAR;
         }
     }
+
+    private boolean validateConfigFile() {
+       File dataFolder = getDataFolder();
+       // Create a File object for the config.yml file
+       File configFile = new File(dataFolder, "config.yml");
+       var ans= loadConfiguration(configFile);
+       if(ans == null) {
+           getLogger().warning( "An configuration exception occurred. Server will shut down in 15 seconds.");
+           try {
+               Thread.sleep(15000);
+           } catch (InterruptedException ex) {
+               ex.printStackTrace();
+           }
+
+           BukkitScheduler scheduler = getServer().getScheduler();
+           updateWeatherTask = scheduler.runTaskTimerAsynchronously(this, () -> {
+           }, 0L, (20L * 60 * minutesBetweenUpdates));
+
+           Bukkit.shutdown();
+           return false;
+       }
+       return true ;
+    }
+
+
+
+    public  YamlConfiguration loadConfiguration(File file) {
+
+        if (file == null) {
+            // File is null
+            getLogger().warning( "Config File is found to be null, please make sure config file is valid");
+            return null;
+        }
+
+        YamlConfiguration config = new YamlConfiguration();
+
+        try {
+            config.load(file);
+        } catch (FileNotFoundException ex) {
+            getLogger().warning( "Config File is not found , please ensure that file exists");
+            return null;
+        } catch (IOException ex) {
+            getLogger().warning( "IO Exception was found in the loading of config file, please review for any issues");
+            return null;
+        } catch (ParserException ex) {
+            getLogger().warning( "Config File is found to have issues with parsing, possibly the syntax of the config.yml, please review contents");
+            return null;
+        }catch (InvalidConfigurationException ex) {
+            getLogger().warning( "Config File is found to have invalid configuration, please review contents");
+            return null;
+        }
+
+        return config;
+    }
+
 }
