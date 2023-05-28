@@ -2,6 +2,7 @@ package mc.spigot.weatherbylocation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
 import java.net.URI;
@@ -14,6 +15,12 @@ public class ServerLocator {
     private String ipAddress;
     private LocationData locationData;
 
+    private final WeatherByLocation plugin;
+
+    public ServerLocator(WeatherByLocation plugin) {
+        this.plugin = plugin;
+    }
+
     public static class LocationData {
         public String countryCode;
         public String region;
@@ -24,7 +31,14 @@ public class ServerLocator {
 
     public LocationData locate() throws IOException, InterruptedException {
         ipAddress = fetchIpAddress();
-        locationData = geolocateIpAddress(ipAddress);
+        FileConfiguration config = plugin.getConfig();
+
+        if(config.contains("ipAddress") && config.getString("ipAddress").equals(ipAddress)){
+            locationData =  locationDataFromConfig();
+        }else{
+            locationData = geolocateIpAddress(ipAddress);
+        }
+
         return locationData;
     }
 
@@ -51,7 +65,7 @@ public class ServerLocator {
         return response.body();
     }
 
-    private static LocationData geolocateIpAddress(String ipAddress) throws IOException, InterruptedException {
+    private  LocationData geolocateIpAddress(String ipAddress) throws IOException, InterruptedException {
         Logger logger = Logger.getLogger("WeatherByLocation");
         String requestUrlString = String.format("http://ip-api.com/json/%s", ipAddress);
         HttpClient client = HttpClient.newHttpClient();
@@ -70,8 +84,45 @@ public class ServerLocator {
         locationResult.city = jsonNode.get("city").asText();
         locationResult.latitude = jsonNode.get("lat").asDouble();
         locationResult.longitude = jsonNode.get("lon").asDouble();
+
+        // copy LocationData object to config.yml
+        saveDataToConfig(ipAddress,locationResult);
+
         // Log result
         logger.info(String.format("Server location identified as %s, %s, %s at coordinates (%.3f, %.3f)", locationResult.city, locationResult.region, locationResult.countryCode, locationResult.latitude, locationResult.longitude));
         return locationResult;
     }
+
+    private  LocationData locationDataFromConfig() {
+
+        Logger logger = Logger.getLogger("WeatherByLocation");
+
+        LocationData locationResult = new LocationData();
+
+        locationResult.countryCode = plugin.getConfig().getString("countryCode");
+        locationResult.region = plugin.getConfig().getString("region");
+        locationResult.city = plugin.getConfig().getString("city");
+        locationResult.latitude = plugin.getConfig().getDouble("latitude");
+        locationResult.longitude = plugin.getConfig().getDouble("longitude");
+
+        // Log result
+        logger.info(String.format("Server location identified as %s, %s, %s at coordinates (%.3f, %.3f)", locationResult.city, locationResult.region, locationResult.countryCode, locationResult.latitude, locationResult.longitude));
+        return locationResult;
+    }
+
+    private  void saveDataToConfig(String ipAddress, LocationData locationResult) {
+
+        // set values of new locationData object to config.yml file
+        plugin.getConfig().set("ipAddress", ipAddress);
+        plugin.getConfig().set("countryCode",  locationResult.countryCode);
+        plugin.getConfig().set("region", locationResult.region);
+        plugin.getConfig().set("city",  locationResult.city);
+        plugin.getConfig().set("latitude", locationResult.latitude);
+        plugin.getConfig().set("longitude",  locationResult.longitude);
+
+        // persist changes made to config.yml to disk
+        plugin.saveConfig();
+
+    }
+
 }

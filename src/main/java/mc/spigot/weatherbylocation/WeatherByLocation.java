@@ -64,6 +64,8 @@ public class WeatherByLocation extends JavaPlugin {
         getLogger().info("WeatherByLocation was enabled.");
         getCommand("set-weather-location").setExecutor(new SetLocationCommand(this));
         getCommand("get-weather-location").setExecutor(new GetLocationCommand(this));
+        getCommand("set-weather-update-interval").setExecutor(new SetUpdateInterval(this));
+
         runStartupTasks();
     }
     @Override
@@ -100,7 +102,7 @@ public class WeatherByLocation extends JavaPlugin {
         }
         else {
             // Otherwise, use the server's ip address to geolocate it and pull weather for that region.
-            ServerLocator serverLocator = new ServerLocator();
+            ServerLocator serverLocator = new ServerLocator(this);
             try {
                 locationData = serverLocator.locate();
             } catch (IOException | InterruptedException e) {
