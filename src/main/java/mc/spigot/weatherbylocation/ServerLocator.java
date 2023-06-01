@@ -12,8 +12,12 @@ import java.net.http.HttpResponse;
 import java.util.logging.Logger;
 
 public class ServerLocator {
-    private String ipAddress;
-    private LocationData locationData;
+
+    private final WeatherByLocation plugin;
+
+    public ServerLocator(WeatherByLocation plugin) {
+        this.plugin = plugin;
+    }
 
     private final WeatherByLocation plugin;
 
@@ -30,27 +34,22 @@ public class ServerLocator {
     }
 
     public LocationData locate() throws IOException, InterruptedException {
-        ipAddress = fetchIpAddress();
-        FileConfiguration config = plugin.getConfig();
+        String ipAddress = fetchIpAddress();
+        return geolocateIpAddress(ipAddress);
+    }
 
-        if(config.contains("ipAddress") && config.getString("ipAddress").equals(ipAddress)){
-            locationData =  locationDataFromConfig();
-        }else{
-            locationData = geolocateIpAddress(ipAddress);
+    public static boolean isCurrentIpAddress(String ipAddress) {
+        Logger logger = Logger.getLogger("WeatherByLocation");
+        try {
+            String serverIpAddress = fetchIpAddress();
+            return serverIpAddress.equals(ipAddress);
+        } catch (IOException | InterruptedException e) {
+            logger.warning(String.format("Error identifying server's public IP address: %s", e));
+            return false;
         }
-
-        return locationData;
     }
 
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
-    public LocationData getLocationData() {
-        return locationData;
-    }
-
-    private static String fetchIpAddress() throws IOException, InterruptedException {
+    public static String fetchIpAddress() throws IOException, InterruptedException {
         Logger logger = Logger.getLogger("WeatherByLocation");
         // Send request to Ipify API
         String requestUrlString = "https://api.ipify.org/";
@@ -84,34 +83,14 @@ public class ServerLocator {
         locationResult.city = jsonNode.get("city").asText();
         locationResult.latitude = jsonNode.get("lat").asDouble();
         locationResult.longitude = jsonNode.get("lon").asDouble();
-
         // copy LocationData object to config.yml
-        saveDataToConfig(ipAddress,locationResult);
-
-        // Log result
-        logger.info(String.format("Server location identified as %s, %s, %s at coordinates (%.3f, %.3f)", locationResult.city, locationResult.region, locationResult.countryCode, locationResult.latitude, locationResult.longitude));
-        return locationResult;
-    }
-
-    private  LocationData locationDataFromConfig() {
-
-        Logger logger = Logger.getLogger("WeatherByLocation");
-
-        LocationData locationResult = new LocationData();
-
-        locationResult.countryCode = plugin.getConfig().getString("countryCode");
-        locationResult.region = plugin.getConfig().getString("region");
-        locationResult.city = plugin.getConfig().getString("city");
-        locationResult.latitude = plugin.getConfig().getDouble("latitude");
-        locationResult.longitude = plugin.getConfig().getDouble("longitude");
-
+        saveDataToConfig(ipAddress, locationResult);
         // Log result
         logger.info(String.format("Server location identified as %s, %s, %s at coordinates (%.3f, %.3f)", locationResult.city, locationResult.region, locationResult.countryCode, locationResult.latitude, locationResult.longitude));
         return locationResult;
     }
 
     private  void saveDataToConfig(String ipAddress, LocationData locationResult) {
-
         // set values of new locationData object to config.yml file
         plugin.getConfig().set("ipAddress", ipAddress);
         plugin.getConfig().set("countryCode",  locationResult.countryCode);
@@ -119,7 +98,6 @@ public class ServerLocator {
         plugin.getConfig().set("city",  locationResult.city);
         plugin.getConfig().set("latitude", locationResult.latitude);
         plugin.getConfig().set("longitude",  locationResult.longitude);
-
         // persist changes made to config.yml to disk
         plugin.saveConfig();
 

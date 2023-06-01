@@ -83,10 +83,15 @@ public class WeatherByLocation extends JavaPlugin {
     public void loadLocationDataFromConfig() {
         locationData.latitude = getConfig().getDouble("latitude");
         locationData.longitude = getConfig().getDouble("longitude");
-    }
-
-    private boolean configHasLatLon() {
-        return getConfig().contains("latitude") && getConfig().contains("longitude");
+        if (getConfig().contains("city")) {
+            locationData.city = getConfig().getString("city");
+        }
+        if (getConfig().contains("region")) {
+            locationData.region = getConfig().getString("region");
+        }
+        if (getConfig().contains("countryCode")) {
+            locationData.countryCode = getConfig().getString("countryCode");
+        }
     }
 
     private void runStartupTasks() {
@@ -94,23 +99,8 @@ public class WeatherByLocation extends JavaPlugin {
         saveDefaultConfig();
         // Refresh config
         reloadConfig();
-        if (configHasLatLon()) {
-            // Check the config for location data
-            locationData = new ServerLocator.LocationData();
-            loadLocationDataFromConfig();
-            getLogger().info(String.format("Loaded location from config: (%.3f, %.3f)", locationData.latitude, locationData.longitude));
-        }
-        else {
-            // Otherwise, use the server's ip address to geolocate it and pull weather for that region.
-            ServerLocator serverLocator = new ServerLocator(this);
-            try {
-                locationData = serverLocator.locate();
-            } catch (IOException | InterruptedException e) {
-                getLogger().warning("Error geolocating your server...");
-                getLogger().warning(e.toString());
-                throw new RuntimeException("Failed to identify a location for you server. Please update the configuration file to specify a location.");
-            }
-        }
+        // Load location data
+        loadLocation();
         // Schedule task to run every minutesBetweenUpdates minutes
         minutesBetweenUpdates = getConfig().getInt("minutes-between-updates");
         BukkitScheduler scheduler = getServer().getScheduler();
@@ -118,9 +108,7 @@ public class WeatherByLocation extends JavaPlugin {
             try {
                 // Get latest values from config, if they exist
                 reloadConfig();
-                if (configHasLatLon()) {
-                    loadLocationDataFromConfig();
-                }
+                loadLocationDataFromConfig();
                 // Fetch weather data
                 WeatherType weatherType = getCurrentWeather(locationData.latitude, locationData.longitude);
                 // Update weather on server
@@ -135,6 +123,41 @@ public class WeatherByLocation extends JavaPlugin {
             }
         }, 0L, (20L * 60 * minutesBetweenUpdates));
 
+    }
+
+    private void loadLocation() {
+        // Check for manually set location
+        if (configHasManualLocation()) {
+            locationData = new ServerLocator.LocationData();
+            loadLocationDataFromConfig();
+            getLogger().info(String.format("Loaded manually set location from config: (%.3f, %.3f)",
+                    locationData.latitude, locationData.longitude));
+        }
+        // Check for cached location. If it exists, also verify the cached IP address matches the server's current IP address.
+        else if (configHasCachedLocation() && ServerLocator.isCurrentIpAddress(getConfig().getString("ipAddress"))) {
+            locationData = new ServerLocator.LocationData();
+            loadLocationDataFromConfig();
+            getLogger().info(String.format("Loaded cached location: %s, %s, %s at (%.3f, %.3f)", locationData.city,
+                    locationData.region, locationData.countryCode, locationData.latitude, locationData.longitude));
+        }
+        // Otherwise, we need to geolocate the server and get location data from it
+        else {
+            ServerLocator serverLocator = new ServerLocator(this);
+            try {
+                locationData = serverLocator.locate();
+            } catch (IOException | InterruptedException e) {
+                getLogger().warning("Error fetching weather data.");
+                getLogger().warning(e.toString());
+            }
+        }
+    }
+
+    private boolean configHasManualLocation() {
+        return getConfig().contains("latitude") && getConfig().contains("longitude") && !getConfig().contains("ipAddress");
+    }
+
+    private boolean configHasCachedLocation() {
+        return getConfig().contains("latitude") && getConfig().contains("longitude") && getConfig().contains("ipAddress");
     }
 
     private void setWeather(WeatherType weatherType) {
@@ -168,7 +191,8 @@ public class WeatherByLocation extends JavaPlugin {
     private WeatherType getCurrentWeather(double lat, double lon) throws IOException, InterruptedException {
         // Send request to Open Meteo API
         int weatherCode = WeatherRequest.getCurrentWeather(lat, lon);
-        getLogger().info(String.format("Current weather for (%.3f, %.3f) is %s. Weather data by Open-Metro.com", lat, lon, WmoCodes.get(weatherCode)));
+        getLogger().info(String.format("Current weather for (%.3f, %.3f) is %s. Weather data by Open-Metro.com",
+                lat, lon, WmoCodes.get(weatherCode)));
         if (rainWeatherCodes.contains(weatherCode)) {
             return WeatherType.RAIN;
         }

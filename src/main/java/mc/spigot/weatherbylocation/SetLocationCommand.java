@@ -44,6 +44,7 @@ public class SetLocationCommand implements CommandExecutor {
         // Write values to config file
         plugin.getConfig().set("latitude", lat);
         plugin.getConfig().set("longitude", lon);
+        deleteCachedLocationData();
         plugin.saveConfig();
         if (sender instanceof Player) {
             Player player = (Player) sender;
@@ -53,5 +54,20 @@ public class SetLocationCommand implements CommandExecutor {
         plugin.reloadConfig();
         plugin.loadLocationDataFromConfig();
         return true;
+    }
+
+    private void deleteCachedLocationData() {
+        if (plugin.getConfig().contains("ipAddress")) {
+            plugin.getConfig().set("ipAddress", null);
+        }
+        if (plugin.getConfig().contains("city")) {
+            plugin.getConfig().set("city", null);
+        }
+        if (plugin.getConfig().contains("region")) {
+            plugin.getConfig().set("region", null);
+        }
+        if (plugin.getConfig().contains("countryCode")) {
+            plugin.getConfig().set("countryCode", null);
+        }
     }
 }
