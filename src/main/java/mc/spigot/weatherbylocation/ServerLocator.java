@@ -19,11 +19,6 @@ public class ServerLocator {
         this.plugin = plugin;
     }
 
-    private final WeatherByLocation plugin;
-
-    public ServerLocator(WeatherByLocation plugin) {
-        this.plugin = plugin;
-    }
 
     public static class LocationData {
         public String countryCode;
