@@ -2,7 +2,6 @@ package mc.spigot.weatherbylocation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
 import java.net.URI;
