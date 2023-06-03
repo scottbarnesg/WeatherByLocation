@@ -2,6 +2,7 @@ package mc.spigot.weatherbylocation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
 import java.net.URI;
@@ -17,6 +18,7 @@ public class ServerLocator {
     public ServerLocator(WeatherByLocation plugin) {
         this.plugin = plugin;
     }
+
 
     public static class LocationData {
         public String countryCode;

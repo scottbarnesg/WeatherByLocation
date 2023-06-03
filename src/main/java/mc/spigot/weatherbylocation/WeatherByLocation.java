@@ -64,6 +64,8 @@ public class WeatherByLocation extends JavaPlugin {
         getLogger().info("WeatherByLocation was enabled.");
         getCommand("set-weather-location").setExecutor(new SetLocationCommand(this));
         getCommand("get-weather-location").setExecutor(new GetLocationCommand(this));
+        getCommand("set-weather-update-interval").setExecutor(new SetUpdateInterval(this));
+
         runStartupTasks();
     }
     @Override
