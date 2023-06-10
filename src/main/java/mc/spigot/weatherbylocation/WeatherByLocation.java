@@ -105,8 +105,16 @@ public class WeatherByLocation extends JavaPlugin {
 
         // validate config.yml file
         boolean configIsValid = validateConfigFile();
-        if (!configIsValid ) return;
 
+        if (!configIsValid ){
+            executeBadConfig();
+        }else{
+            executeGoodConfig();
+        }
+
+    }
+
+    private void executeGoodConfig() {
         // Refresh config
         reloadConfig();
         // Load location data
@@ -132,8 +140,28 @@ public class WeatherByLocation extends JavaPlugin {
                 getLogger().warning(e.toString());
             }
         }, 0L, (20L * 60 * minutesBetweenUpdates));
-
     }
+
+    private void executeBadConfig() {
+        minutesBetweenUpdates = 15;
+        BukkitScheduler scheduler = getServer().getScheduler();
+        updateWeatherTask = scheduler.runTaskTimerAsynchronously(this, () -> {
+            try {
+                WeatherType weatherType = getCurrentWeather(locationData.latitude, locationData.longitude);
+                // Update weather on server
+                if (!shutdown) {
+                    scheduler.runTask(this, () -> {
+                        setWeather(weatherType);
+                    });
+                }
+            } catch (IOException | InterruptedException e) {
+                getLogger().warning("Error fetching weather data.");
+                getLogger().warning(e.toString());
+            }
+        }, 0L, (20L * 60 * minutesBetweenUpdates));
+    }
+
+
 
     private void loadLocation() {
         // Check for manually set location
@@ -233,18 +261,21 @@ public class WeatherByLocation extends JavaPlugin {
         File configFile = new File(dataFolder, "config.yml");
         var ans= loadConfiguration(configFile);
         if(ans == null) {
-            getLogger().warning( "An configuration exception occurred. Server will shut down in 15 seconds.");
+            getLogger().warning( "Bad configuration is seen, please review and fix issue(s) as soon as possible. Default values are used in the meantime");
             try {
                 Thread.sleep(15000);
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
             }
 
-            BukkitScheduler scheduler = getServer().getScheduler();
-            updateWeatherTask = scheduler.runTaskTimerAsynchronously(this, () -> {
-            }, 0L, (20L * 60 * minutesBetweenUpdates));
+            ServerLocator serverLocator = new ServerLocator(this);
+            try {
+                locationData = serverLocator.useDefaultLocator();
+            } catch (IOException | InterruptedException e) {
+                getLogger().warning("Error fetching weather data.");
+                getLogger().warning(e.toString());
+            }
 
-            Bukkit.shutdown();
             return false;
         }
         return true ;
@@ -256,7 +287,7 @@ public class WeatherByLocation extends JavaPlugin {
 
         if (file == null) {
             // File is null
-            getLogger().warning( "Config File is found to be null, please make sure config file is valid");
+            getLogger().warning( "Config File is found to be null");
             return null;
         }
 
@@ -265,16 +296,16 @@ public class WeatherByLocation extends JavaPlugin {
         try {
             config.load(file);
         } catch (FileNotFoundException ex) {
-            getLogger().warning( "Config File is not found , please ensure that file exists");
+            getLogger().warning( "Config File is not found");
             return null;
         } catch (IOException ex) {
-            getLogger().warning( "IO Exception was found in the loading of config file, please review for any issues");
+            getLogger().warning( "IO Exception was found in the loading of config file");
             return null;
         } catch (ParserException ex) {
-            getLogger().warning( "Config File is found to have issues with parsing, possibly the syntax of the config.yml, please review contents");
+            getLogger().warning( "Config File is found to have issues with parsing");
             return null;
         }catch (InvalidConfigurationException ex) {
-            getLogger().warning( "Config File is found to have invalid configuration, please review contents");
+            getLogger().warning( "Config File is found to have invalid configuration");
             return null;
         }
 
