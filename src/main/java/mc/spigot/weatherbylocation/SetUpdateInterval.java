@@ -54,9 +54,9 @@ public class SetUpdateInterval implements CommandExecutor {
         plugin.saveConfig();
         if (sender instanceof Player) {
             Player player = (Player) sender;
-            player.sendMessage(ChatColor.AQUA + String.format("Set update interval to %d minutes. This will take effect after the next update.", interval));
+            player.sendMessage(ChatColor.AQUA + String.format("Set update interval to %d minutes. This will take effect after the next weather update.", interval));
         }
-        getLogger().info(String.format("Set update interval to %d minutes. This will take effect after the next update.", interval));
+        getLogger().info(String.format("Set update interval to %d minutes. This will take effect after the next weather update.", interval));
         return true;
     }
 }
