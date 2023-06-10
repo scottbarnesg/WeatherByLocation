@@ -1,5 +1,5 @@
 name: WeatherByLocation
-version: 0.2.10
+version: 0.3.0
 main: mc.spigot.weatherbylocation.WeatherByLocation
 api-version: 1.13
 commands:
