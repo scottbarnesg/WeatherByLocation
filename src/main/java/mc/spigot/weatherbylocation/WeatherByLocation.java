@@ -1,11 +1,16 @@
 package mc.spigot.weatherbylocation;
 
 import org.bukkit.World;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
+import org.yaml.snakeyaml.parser.ParserException;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -97,6 +102,11 @@ public class WeatherByLocation extends JavaPlugin {
     private void runStartupTasks() {
         // Create default configuration file, if it doesn't exist
         saveDefaultConfig();
+
+        // validate config.yml file
+        boolean configIsValid = validateConfigFile();
+        if (!configIsValid ) return;
+
         // Refresh config
         reloadConfig();
         // Load location data
@@ -224,5 +234,59 @@ public class WeatherByLocation extends JavaPlugin {
         else {
             return WeatherType.CLEAR;
         }
+    }
+
+    private boolean validateConfigFile() {
+        File dataFolder = getDataFolder();
+        // Create a File object for the config.yml file
+        File configFile = new File(dataFolder, "config.yml");
+        var ans= loadConfiguration(configFile);
+        if(ans == null) {
+            getLogger().warning( "An configuration exception occurred. Server will shut down in 15 seconds.");
+            try {
+                Thread.sleep(15000);
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
+
+            BukkitScheduler scheduler = getServer().getScheduler();
+            updateWeatherTask = scheduler.runTaskTimerAsynchronously(this, () -> {
+            }, 0L, (20L * 60 * minutesBetweenUpdates));
+
+            Bukkit.shutdown();
+            return false;
+        }
+        return true ;
+    }
+
+
+
+    public  YamlConfiguration loadConfiguration(File file) {
+
+        if (file == null) {
+            // File is null
+            getLogger().warning( "Config File is found to be null, please make sure config file is valid");
+            return null;
+        }
+
+        YamlConfiguration config = new YamlConfiguration();
+
+        try {
+            config.load(file);
+        } catch (FileNotFoundException ex) {
+            getLogger().warning( "Config File is not found , please ensure that file exists");
+            return null;
+        } catch (IOException ex) {
+            getLogger().warning( "IO Exception was found in the loading of config file, please review for any issues");
+            return null;
+        } catch (ParserException ex) {
+            getLogger().warning( "Config File is found to have issues with parsing, possibly the syntax of the config.yml, please review contents");
+            return null;
+        }catch (InvalidConfigurationException ex) {
+            getLogger().warning( "Config File is found to have invalid configuration, please review contents");
+            return null;
+        }
+
+        return config;
     }
 }
