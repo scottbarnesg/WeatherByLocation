@@ -104,25 +104,34 @@ public class WeatherByLocation extends JavaPlugin {
         // Schedule task to run every minutesBetweenUpdates minutes
         minutesBetweenUpdates = getConfig().getInt("minutes-between-updates");
         BukkitScheduler scheduler = getServer().getScheduler();
-        updateWeatherTask = scheduler.runTaskTimerAsynchronously(this, () -> {
-            try {
-                // Get latest values from config, if they exist
-                reloadConfig();
-                loadLocationDataFromConfig();
-                // Fetch weather data
-                WeatherType weatherType = getCurrentWeather(locationData.latitude, locationData.longitude);
-                // Update weather on server
-                if (!shutdown) {
-                    scheduler.runTask(this, () -> {
-                        setWeather(weatherType);
-                    });
-                }
-            } catch (IOException | InterruptedException e) {
-                getLogger().warning("Error fetching weather data.");
-                getLogger().warning(e.toString());
-            }
-        }, 0L, (20L * 60 * minutesBetweenUpdates));
+        updateWeatherTask = scheduler.runTaskTimerAsynchronously(this, this::runWeatherUpdate, 0L, 20L * 60 * minutesBetweenUpdates);
+    }
 
+    private void runWeatherUpdate() {
+        BukkitScheduler scheduler = getServer().getScheduler();
+        try {
+            // Get latest values from config, if they exist
+            reloadConfig();
+            loadLocationDataFromConfig();
+            // Fetch weather data
+            WeatherType weatherType = getCurrentWeather(locationData.latitude, locationData.longitude);
+            // Update weather on server
+            if (!shutdown) {
+                scheduler.runTask(this, () -> {
+                    setWeather(weatherType);
+                });
+            }
+            int congifIntervalBetweenUpdates = getConfig().getInt("minutes-between-updates");
+            if (congifIntervalBetweenUpdates != minutesBetweenUpdates) {
+                minutesBetweenUpdates = congifIntervalBetweenUpdates;
+                getLogger().info(String.format("Detected change in update interval. Setting update interval to %d minutes.", minutesBetweenUpdates));
+                updateWeatherTask.cancel();
+                updateWeatherTask = scheduler.runTaskTimerAsynchronously(this, this::runWeatherUpdate, 20L * 60 * minutesBetweenUpdates, 20L * 60 * minutesBetweenUpdates);
+            }
+        } catch (IOException | InterruptedException e) {
+            getLogger().warning("Error fetching weather data.");
+            getLogger().warning(e.toString());
+        }
     }
 
     private void loadLocation() {
